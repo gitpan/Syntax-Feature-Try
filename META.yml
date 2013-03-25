@@ -1,0 +1,36 @@
+---
+abstract: 'try/catch/finally statement for exception handling'
+author:
+  - 'Tomas Pokorny <tnt@cpan.org>'
+build_requires:
+  Exception::Class: 0
+  FindBin: 0
+  MooseX::Declare: 0
+  Test::Exception: 0
+  Test::LeakTrace: 0
+  Test::More: 0
+  Test::Spec: 0
+  Test::Warn: 0
+  base: 0
+  syntax: 0
+configure_requires:
+  Devel::CallParser: 0
+  ExtUtils::MakeMaker: 6.30
+dynamic_config: 0
+generated_by: 'Dist::Zilla version 4.300031, CPAN::Meta::Converter version 2.120921'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Syntax-Feature-Try
+requires:
+  Carp: 0
+  Devel::CallParser: 0
+  Exporter: 0
+  Import::Into: 0
+  Scalar::Util: 0
+  XSLoader: 0
+  perl: 5.014
+  strict: 0
+  warnings: 0
+version: 0.001
