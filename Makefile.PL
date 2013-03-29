@@ -9,6 +9,7 @@ my %WriteMakefileArgs = (
   'ABSTRACT' => 'try/catch/finally statement for exception handling',
   'AUTHOR' => 'Tomas Pokorny <tnt@cpan.org>',
   'BUILD_REQUIRES' => {
+    'English' => '0',
     'Exception::Class' => '0',
     'FindBin' => '0',
     'MooseX::Declare' => '0',
@@ -38,7 +39,7 @@ my %WriteMakefileArgs = (
     'strict' => '0',
     'warnings' => '0'
   },
-  'VERSION' => '0.001',
+  'VERSION' => '0.002',
   'test' => {
     'TESTS' => 't/*.t'
   }
