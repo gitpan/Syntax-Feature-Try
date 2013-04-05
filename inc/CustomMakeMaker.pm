@@ -1,6 +1,7 @@
 package inc::CustomMakeMaker;
 
 use Moose;
+use ExtUtils::Depends;
 
 extends 'Dist::Zilla::Plugin::MakeMaker::Awesome';
 
@@ -14,16 +15,18 @@ around _build_WriteMakefile_args => sub {
         $args->{DEFINE} //= "";
         $args->{DEFINE} .= " -D$key";
     }
-    return $args;
-};
 
-around _build_MakeFile_PL_template => sub {
-    my ($orig, $self) = @_;
-    return $self->$orig . q[
-        use Devel::CallParser 'callparser1_h';
-        open my $fh, '>', 'callparser1.h' or die "Couldn't write to callparser1.h";
-        $fh->print(callparser1_h);
-    ];
+    my $depends = ExtUtils::Depends->new(qw/
+        Syntax::Feature::Try
+        B::Hooks::OP::Check
+        B::Hooks::OP::PPAddr
+    /);
+    $args = {%$args, $depends->get_makefile_vars};
+
+    $args->{INC} .= " -Isrc";
+
+    #use Data::Dumper; warn Dumper($args);
+    return $args;
 };
 
 __PACKAGE__->meta->make_immutable;

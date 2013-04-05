@@ -1,10 +1,18 @@
 Revision history for perl module Syntax::Feature::Try
 
+0.003   2013-04-05
+
+    - Implement unimport (no syntax 'try';)
+    - Fix "finally" block to propagate exceptions thrown inside
+    - Raise error if "return" is called inside try/catch/finally block
+    - Use PL_keyword_plugin API instead of Devel::CallParser
+    - Fix missing aTHX/pTHX internal parameters in C-sources
+
 0.002   2013-03-29
 
-    Update tests for "parse errors"
+    - Update tests for "parse errors"
 
 0.001   2013-03-25
 
-    First public version of module for try/catch/finally statement
+    - First public version of module for try/catch/finally statement
 

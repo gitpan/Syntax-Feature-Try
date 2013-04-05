@@ -11,6 +11,7 @@ my %WriteMakefileArgs = (
   'BUILD_REQUIRES' => {
     'English' => '0',
     'Exception::Class' => '0',
+    'Exporter' => '0',
     'FindBin' => '0',
     'MooseX::Declare' => '0',
     'Test::Exception' => '0',
@@ -22,24 +23,25 @@ my %WriteMakefileArgs = (
     'syntax' => '0'
   },
   'CONFIGURE_REQUIRES' => {
-    'Devel::CallParser' => '0',
     'ExtUtils::MakeMaker' => '6.30'
   },
   'DISTNAME' => 'Syntax-Feature-Try',
   'EXE_FILES' => [],
+  'INC' => '-I/usr/lib/perl5/B/Hooks/OP/Check/Install -I/usr/lib/perl5/B/Hooks/OP/PPAddr/Install -Isrc',
+  'LIBS' => '',
   'LICENSE' => 'perl',
   'NAME' => 'Syntax::Feature::Try',
   'PREREQ_PM' => {
-    'Carp' => '0',
-    'Devel::CallParser' => '0',
-    'Exporter' => '0',
-    'Import::Into' => '0',
+    'B::Hooks::OP::Check' => '0.19',
+    'B::Hooks::OP::PPAddr' => '0.03',
     'Scalar::Util' => '0',
     'XSLoader' => '0',
     'strict' => '0',
+    'syntax' => '0.004',
     'warnings' => '0'
   },
-  'VERSION' => '0.002',
+  'TYPEMAPS' => [],
+  'VERSION' => '0.003',
   'test' => {
     'TESTS' => 't/*.t'
   }
@@ -64,8 +66,3 @@ delete $WriteMakefileArgs{CONFIGURE_REQUIRES}
 
 WriteMakefile(%WriteMakefileArgs);
 
-
-        use Devel::CallParser 'callparser1_h';
-        open my $fh, '>', 'callparser1.h' or die "Couldn't write to callparser1.h";
-        $fh->print(callparser1_h);
-    

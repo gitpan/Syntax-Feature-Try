@@ -2,40 +2,79 @@ package Syntax::Feature::Try;
 
 use strict;
 use warnings;
-use Import::Into;
-use Syntax::Feature::Try::Handler;
+use XSLoader;
+use B::Hooks::OP::Check;
+use B::Hooks::OP::PPAddr;
+use Scalar::Util qw/ blessed /;
 
-our $VERSION = '0.002';
-our $PARSER = 'Syntax::Feature::Try';
-our $HANDLER = 'Syntax::Feature::Try::Handler';
+BEGIN {
+    our $VERSION = '0.003';
+    XSLoader::load();
+}
 
 sub install {
-    my ($class, %args) = @_;
-    my $target = $args{into};
-
-    $PARSER->import::into($target);
+    $^H{+HINTKEY_ENABLED} = 1;
 }
 
-# TODO move following code to separate package ...::Parser
-use Carp;
-use Devel::CallParser;
-use XSLoader;
-use Exporter 'import';
-
-our @EXPORT = our @EXPORT_OK = qw/ try catch finally /;
-
-XSLoader::load();
-
-sub try {
-    $HANDLER->new(@_)->run();
+sub uninstall {
+    $^H{+HINTKEY_ENABLED} = 0;
 }
 
-sub catch {
-    croak "syntax error: try/catch/finally block sequence";
+sub _statement {
+    my ($try_block, $catch_list, $finally_block) = @_;
+
+    local $@;
+    eval {
+        BEGIN { $^H{+HINTKEY_BLOCK} = BLOCK_TRY }
+        $try_block->();
+    };
+    my $exception = $@;
+    if ($exception) {
+        my $handler = _get_exception_handler($exception, $catch_list);
+        if ($handler) {
+            eval {
+                BEGIN { $^H{+HINTKEY_BLOCK} = BLOCK_CATCH }
+                $handler->($exception);
+            };
+            $exception = $@;
+        }
+    }
+
+    if ($finally_block) {
+        {
+            BEGIN { $^H{+HINTKEY_BLOCK} = BLOCK_FINALLY }
+            $finally_block->();
+        }
+    }
+
+    if ($exception) {
+        _rethrow($exception);
+    }
 }
 
-sub finally {
-    croak "syntax error: finally without try block";
+sub _get_exception_handler {
+    my ($exception, $catch_list) = @_;
+
+    foreach my $item (@{ $catch_list }) {
+        my ($handler, @args) = @$item;
+        return $handler if _exception_match_args($exception, @args);
+    }
+}
+
+sub _exception_match_args {
+    my ($exception, $className) = @_;
+
+    if (defined $className) {
+        return 0 if not blessed($exception);
+        return 0 if not $exception->isa($className);
+    }
+    return 1;   # without args catch all exceptions
+}
+
+sub _rethrow {
+    my ($exception) = @_;
+    local $SIG{__DIE__} = undef;
+    die $exception;
 }
 
 1;
@@ -87,7 +126,7 @@ If it throws an error, then first I<catch block> (in order) that can handle
 thrown error will be executed. Other I<catch blocks> will be skipped.
 
 If none of I<catch blocks> can handle the error, it is thrown out of
-whole statement. It I<try block> doe not throw an error,
+whole statement. If I<try block> does not throw an error,
 all I<catch blocks> are skipped.
 
 =head2 catch error class
@@ -106,12 +145,13 @@ To catch all errors use syntax:
 
     catch ($e) { ... }
 
-Caught error is acessible inside I<catch block>
+Caught error is accessible inside I<catch block>
 via declared local variable C<$e>.
 
 =head2 rethrow error
 
-To rethrow caught error simple call "die $err".
+To rethrow caught error call "die $err".
+
 For example (log any Connection::Error):
 
     try { ... }
@@ -122,7 +162,7 @@ For example (log any Connection::Error):
 
 =head2 finally
 
-The L<finally block> is executed at the end of statement.
+The I<finally block> is executed at the end of statement.
 It is always executed (even if try or catch block throw an error).
 
     my $fh;
@@ -133,6 +173,9 @@ It is always executed (even if try or catch block throw an error).
     finally {
         $fh->close;
     }
+
+B<WARNING>: If finally block throws an exception,
+originaly thrown exception (from try/catch block) is discarded.
 
 =head1 Exception::Class
 

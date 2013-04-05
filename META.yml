@@ -5,6 +5,7 @@ author:
 build_requires:
   English: 0
   Exception::Class: 0
+  Exporter: 0
   FindBin: 0
   MooseX::Declare: 0
   Test::Exception: 0
@@ -15,7 +16,6 @@ build_requires:
   base: 0
   syntax: 0
 configure_requires:
-  Devel::CallParser: 0
   ExtUtils::MakeMaker: 6.30
 dynamic_config: 0
 generated_by: 'Dist::Zilla version 4.300005, CPAN::Meta::Converter version 2.112621'
@@ -25,13 +25,12 @@ meta-spec:
   version: 1.4
 name: Syntax-Feature-Try
 requires:
-  Carp: 0
-  Devel::CallParser: 0
-  Exporter: 0
-  Import::Into: 0
+  B::Hooks::OP::Check: 0.19
+  B::Hooks::OP::PPAddr: 0.03
   Scalar::Util: 0
   XSLoader: 0
   perl: 5.014
   strict: 0
+  syntax: 0.004
   warnings: 0
-version: 0.002
+version: 0.003
