@@ -14,6 +14,7 @@ build_requires:
   Test::Spec: 0
   Test::Warn: 0
   base: 0
+  perl: v5.10.1
   syntax: 0
 configure_requires:
   ExtUtils::MakeMaker: 6.30
@@ -25,12 +26,10 @@ meta-spec:
   version: 1.4
 name: Syntax-Feature-Try
 requires:
-  B::Hooks::OP::Check: 0.19
-  B::Hooks::OP::PPAddr: 0.03
   Scalar::Util: 0
   XSLoader: 0
   perl: 5.014
   strict: 0
   syntax: 0.004
   warnings: 0
-version: 0.003
+version: 0.004

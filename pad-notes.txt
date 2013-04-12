@@ -1,0 +1,17 @@
+
+
+see:
+    PL_in_my = KEY_my
+
+(op.c)
+PADOFFSET
+Perl_allocmy(pTHX_ const char *const name, const STRLEN len, const U32 flags)
+
+  it calls:
+    off = pad_add_name(name, len, ...)
+
+(toke.c)
+
+    pl_yylval.opval = newOP(OP_PADANY, 0);
+    pl_yylval.opval->op_targ = allocmy(PL_tokenbuf, tokenbuf_len, 0);
+

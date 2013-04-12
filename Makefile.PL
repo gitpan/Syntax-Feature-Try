@@ -20,6 +20,7 @@ my %WriteMakefileArgs = (
     'Test::Spec' => '0',
     'Test::Warn' => '0',
     'base' => '0',
+    'perl' => 'v5.10.1',
     'syntax' => '0'
   },
   'CONFIGURE_REQUIRES' => {
@@ -27,21 +28,17 @@ my %WriteMakefileArgs = (
   },
   'DISTNAME' => 'Syntax-Feature-Try',
   'EXE_FILES' => [],
-  'INC' => '-I/usr/lib/perl5/B/Hooks/OP/Check/Install -I/usr/lib/perl5/B/Hooks/OP/PPAddr/Install -Isrc',
-  'LIBS' => '',
+  'INC' => ' -Isrc',
   'LICENSE' => 'perl',
   'NAME' => 'Syntax::Feature::Try',
   'PREREQ_PM' => {
-    'B::Hooks::OP::Check' => '0.19',
-    'B::Hooks::OP::PPAddr' => '0.03',
     'Scalar::Util' => '0',
     'XSLoader' => '0',
     'strict' => '0',
     'syntax' => '0.004',
     'warnings' => '0'
   },
-  'TYPEMAPS' => [],
-  'VERSION' => '0.003',
+  'VERSION' => '0.004',
   'test' => {
     'TESTS' => 't/*.t'
   }

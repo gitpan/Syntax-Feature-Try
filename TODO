@@ -1,11 +1,13 @@
- - croak if "return/wantarray" is called inside try/catch/finally block
-    -> similar for next,last,redo
-    -> later: implement return from subrutine inside try/catch/finally blocks
+ - check/fix problems inside try/catch/finally block
+    -> loop ops: next,last,redo
 
  - update stacktrace / caller ? 
 
  - test usage in different module that it is used
 
- - implement keyword "rethrow" or simple use die?
  - rewrite documentation to English ;)
  - check TODOs in source-code
+
+ - set ( %Carp::Internal /  %Carp::CarpInternal ) to skip try/catch blocks
+ - check if "die called from DESTROY" called at the end of "try block"
+    does not break try/catch/finally handling

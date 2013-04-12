@@ -11,6 +11,7 @@ describe "code without finally block" => sub {
     it "can be compiled" => sub {
         Syntax::Feature::Try->expects('_statement')->returns(sub {
                 @parsed = @_;
+                undef;
             });
 
         compile_ok q[
@@ -61,6 +62,7 @@ describe "code try/finally" => sub {
     it "can be compiled" => sub {
         Syntax::Feature::Try->expects('_statement')->returns(sub {
                 @parsed = @_;
+                undef;
             });
 
         compile_ok q[
@@ -75,12 +77,8 @@ describe "code try/finally" => sub {
         it "has expected format" => sub {
             is(scalar @parsed, 3, "It returns three arguments");
             is(ref $parsed[0], 'CODE', 'first is reference to code for try-block');
-            is(ref $parsed[1], 'ARRAY', 'second is reference to list of catch parts');
+            is($parsed[1], undef, 'second is undef (none catch block)');
             is(ref $parsed[2], 'CODE', 'third is reference to code for finally-block');
-        };
-
-        it "contains none catch blocks" => sub {
-            is_deeply( $parsed[1], [] );
         };
     };
 };
@@ -91,6 +89,7 @@ describe "code try/catch/finally" => sub {
     it "can be compiled" => sub {
         Syntax::Feature::Try->expects('_statement')->returns(sub {
                 @parsed = @_;
+                undef;
             });
 
         compile_ok q[

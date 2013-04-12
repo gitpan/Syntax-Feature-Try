@@ -1,13 +1,21 @@
 #include <perl.h>
-#include <hook_op_check.h>
-#include <hook_op_ppaddr.h>
 
-#define NO_XSLOCKS
-#include <XSUB.h>
-
-#include "try-catch-common.h"
+#include "try-catch-constants.h"
 #include "try-catch-parser.h"
 #include "try-catch-hints.h"
+#include "try-catch-optree.h"
+
+/*** debug ***/
+
+#ifdef TRY_PARSER_DEBUG
+    #include <perlio.h>
+    #define DEBUG_MSG(fmt...)   PerlIO_printf(PerlIO_stderr(), "TRY_PARSER_DEBUG: " fmt)
+#else
+    #define DEBUG_MSG(fmt...)
+#endif
+
+/*** error reporting ***/
+#define syntax_error(msg)   croak("syntax error: %s", msg)
 
 #define lex_buf_ptr         ( PL_parser->bufptr )
 #define lex_buf_end         ( PL_parser->bufend )
@@ -78,26 +86,11 @@ static SV *my_parse_identifier(pTHX_ int allow_namespace) {
     return ident;
 }
 
-static OP* my_before_return(pTHX_ OP *op, void *user_data) {
-    if (is_inside_special_block()) {
-        syntax_error("return inside try/catch/finally blocks is not working");
-    }
-    return op;
-}
-
-static OP *my_op_check(pTHX_ OP *op, void *user_data) {
-    if (is_syntax_enabled() && (op->op_type == OP_RETURN)) {
-        hook_op_ppaddr_around(op, my_before_return, NULL, NULL);
-    }
-    return op;
-}
-
 #define parse_code_block(inj_code)  my_parse_code_block(aTHX_ inj_code)
 static OP *my_parse_code_block(pTHX_ char *inject_code) {
     I32 floor;
-    OP *ret_op;
+    OP *content_op, *ret_op;
     dXCPT;
-    hook_op_check_id check_id_return;
 
     lex_read_space(0);
     if (lex_next_char != '{') {
@@ -112,17 +105,9 @@ static OP *my_parse_code_block(pTHX_ char *inject_code) {
         lex_stuff_pvs("{", 0);
     }
 
-    check_id_return = hook_op_check(OP_RETURN, my_op_check, NULL);
-
-    XCPT_TRY_START {
-        floor = start_subparse(0, CVf_ANON);
-        ret_op = newANONSUB(floor, NULL, parse_block(0));
-    } XCPT_TRY_END
-
-    // finally remove op-checks
-    hook_op_check_remove(OP_RETURN, check_id_return);
-
-    XCPT_CATCH { XCPT_RETHROW; }
+    floor = start_subparse(0, CVf_ANON);
+    content_op = build_block_content_op(parse_block(0));
+    ret_op = newANONSUB(floor, NULL, content_op);
 
     DEBUG_MSG("{ ... }\n");
     lex_read_space(0);
@@ -146,23 +131,20 @@ static void my_warn_on_unusual_class_name(pTHX_ char *name) {
 
 #define parse_catch_args()  my_parse_catch_args(aTHX)
 static OP *my_parse_catch_args(pTHX) {
-    SV *class_name, *var_name;
-    OP *catch_args, *catch_block;
+    SV *class_name_sv, *var_name_sv;
+    OP *block_op;
 
     lex_read_space(0);
     if (!parse_char('(')) {
         syntax_error("expected '(' after catch");
     }
 
-    catch_args = NULL;
-
     // exception class-name
     lex_read_space(0);
-    class_name = parse_identifier(1);
-    if (class_name) {
-        DEBUG_MSG("class-name: %s\n", SvPVbyte_nolen(class_name));
-        warn_on_unusual_class_name(SvPVbyte_nolen(class_name));
-        catch_args = newSVOP(OP_CONST, 0, class_name);
+    class_name_sv = parse_identifier(1);
+    if (class_name_sv) {
+        DEBUG_MSG("class-name: %s\n", SvPVbyte_nolen(class_name_sv));
+        warn_on_unusual_class_name(SvPVbyte_nolen(class_name_sv));
     }
 
     // exception variable-name
@@ -170,38 +152,39 @@ static OP *my_parse_catch_args(pTHX) {
     if (!parse_char('$')) {
         syntax_error("invalid catch syntax");
     }
-    var_name = sv_2mortal(parse_identifier(0));
-    if (!var_name) {
+    var_name_sv = sv_2mortal(parse_identifier(0));
+    if (!var_name_sv) {
         syntax_error("invalid catch syntax");
     }
-    DEBUG_MSG("varname: %s\n", SvPVbyte_nolen(var_name));
+    DEBUG_MSG("varname: %s\n", SvPVbyte_nolen(var_name_sv));
 
     lex_read_space(0);
     if (!parse_char(')')) {
         syntax_error("invalid catch syntax");
     }
 
-    catch_block = parse_code_block(form("my $%s=shift;", SvPVbyte_nolen(var_name)));
-    if (!catch_block) {
+    block_op = parse_code_block(form("my $%s=shift;", SvPVbyte_nolen(var_name_sv)));
+    if (!block_op) {
         syntax_error("expected block after 'catch()'");
     }
-    return newLISTOP(OP_LIST, 0, catch_block, catch_args);
+    return build_catch_args_optree(block_op, class_name_sv);
 }
 
 #define parse_all_catch_blocks()    my_parse_all_catch_blocks(aTHX)
 static OP *my_parse_all_catch_blocks(pTHX) {
-    OP *catch_list, *catch_args;
+    OP *catch_list_op;
 
-    catch_list = NULL;
+    catch_list_op = NULL;
     while (parse_keyword("catch")) {
-        catch_args = parse_catch_args();
-        catch_args = newANONLIST(catch_args);
-
-        catch_list = catch_list
-                        ? op_append_elem(OP_LIST, catch_list, catch_args)
-                        : newLISTOP(OP_LIST, 0, catch_args, NULL);
+        if (!catch_list_op) {
+            catch_list_op = newNULLLIST();
+        }
+        catch_list_op = op_append_elem(OP_LIST,
+            catch_list_op,
+            newANONLIST( parse_catch_args() )
+        );
     }
-    return catch_list;
+    return catch_list_op;
 }
 
 #define parse_finally_block()   my_parse_finally_block(aTHX)
@@ -219,51 +202,27 @@ static OP *my_parse_finally_block(pTHX) {
     return finally_block;
 }
 
-/* build optree for:
- *  <MAIN_PKG>::_statement(@args);
- */
-#define build_statement_optree(args_op) my_build_statement_optree(aTHX_ args_op)
-static OP *my_build_statement_optree(pTHX_ OP *args_op) {
-    HV *stash;
-    GV *handler_gv;
-    OP *call_op;
-
-    stash = gv_stashpv(MAIN_PKG, 0);
-    handler_gv = gv_fetchmethod(stash, "_statement");
-    call_op = newUNOP(OP_ENTERSUB, OPf_STACKED,
-            op_append_elem(OP_LIST, args_op,
-                newGVOP(OP_GV, 0, handler_gv)
-            )
-        );
-    return op_scope(call_op);
-}
-
 static OP *my_parse_try_statement(pTHX)
 {
-    OP *try_block, *catch_list, *catch_args, *catch_block, *finally_block, *ret;
+    OP *try_block_op, *catch_list_op, *finally_block_op, *ret_op;
 
-    try_block = parse_code_block(NULL);
-    if (!try_block) {
+    try_block_op = parse_code_block(NULL);
+    if (!try_block_op) {
         syntax_error("expected block after 'try'");
     }
 
-    catch_list = parse_all_catch_blocks();
-    finally_block = parse_finally_block();
+    catch_list_op = parse_all_catch_blocks();
+    finally_block_op = parse_finally_block();
 
-    if (!catch_list && !finally_block) {
+    if (!catch_list_op && !finally_block_op) {
         syntax_error("expected catch/finally after try block");
     }
 
-    ret = build_statement_optree(
-        op_append_elem(
-            OP_LIST,
-            newLISTOP(OP_LIST, 0, try_block, newANONLIST(catch_list)),
-            finally_block
-        )
-    );
+    ret_op = build_statement_optree(
+                try_block_op, catch_list_op, finally_block_op);
 #ifdef TRY_PARSER_DUMP
-    op_dump(ret);
+    op_dump(ret_op);
 #endif
-    return ret;
+    return ret_op;
 }
 

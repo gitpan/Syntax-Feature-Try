@@ -10,12 +10,17 @@ Try.xs
 dist.ini
 inc/CustomMakeMaker.pm
 lib/Syntax/Feature/Try.pm
-src/try-catch-common.c
-src/try-catch-common.h
+pad-notes.txt
+src/try-catch-constants.c
+src/try-catch-constants.h
 src/try-catch-hints.c
 src/try-catch-hints.h
+src/try-catch-optree.c
+src/try-catch-optree.h
 src/try-catch-parser.c
 src/try-catch-parser.h
+src/try-catch-stack.c
+src/try-catch-stack.h
 t/01_use_ok.t
 t/10_parser_output.t
 t/15_parser_syntax_ok.t
@@ -28,8 +33,7 @@ t/catch_variable.t
 t/exception_class.t
 t/finally.t
 t/import.t
-t/lib/mock_module.pm
-t/lib/mock_return.pl
+t/last_op_in_block.t
 t/lib/test_tools.pm
 t/line_numbers.t
 t/memory_leaks.t
@@ -37,4 +41,6 @@ t/nested.t
 t/release-pod-coverage.t
 t/release-pod-syntax.t
 t/return.t
+t/sig_die.t
 t/statement.t
+t/wantarray.t
