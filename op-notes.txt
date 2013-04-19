@@ -1,0 +1,26 @@
+https://www.socialtext.net/perl5/optree_guts
+
+Options:
+m   needs stack mark
+f   needs constant folding
+s   produces a scalar
+i   produces an integer
+t   needs a target
+T   target can be in a pad
+I   has a corresponding integer version
+d   has side effects
+u   uses $_ if no argument given
+
+
+Values for the operand types are:
+S   scalar
+L   list
+A   array
+H   hash
+C   sub (CV)
+F   file
+Fs  socket
+F-  filetest
+R   reference
+"?" denotes an optional operand.
+

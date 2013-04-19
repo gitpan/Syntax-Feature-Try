@@ -1,14 +1,17 @@
 #include <perl.h>
 #include "try-catch-constants.h"
 
-static void my_setup_constants(pTHX) {
-    hintkey_enabled_sv = newSVpvs_share(HINTKEY_ENABLED);
-    hintkey_block_sv = newSVpvs_share(HINTKEY_BLOCK);
+int my_is_end_of_block(pTHX_ SV* rv) {
+    return SvROK(rv) && (SvRV(rv) == end_of_block_sv);
+}
 
+static void my_setup_constants(pTHX) {
     internal_stash = gv_stashpv(MAIN_PKG, 0);
+
+    // create read-only unique value for "END_OF_BLOCK*" macros
+    end_of_block_sv = newSV(0);
+    SvREADONLY_on(end_of_block_sv);
+
+    hintkey_enabled_sv = newSVpvs_share(HINTKEY_ENABLED);
     newCONSTSUB(internal_stash, "HINTKEY_ENABLED",   hintkey_enabled_sv);
-    newCONSTSUB(internal_stash, "HINTKEY_BLOCK",     hintkey_block_sv);
-    newCONSTSUB(internal_stash, "BLOCK_TRY",         newSViv(BLOCK_TRY));
-    newCONSTSUB(internal_stash, "BLOCK_CATCH",       newSViv(BLOCK_CATCH));
-    newCONSTSUB(internal_stash, "BLOCK_FINALLY",     newSViv(BLOCK_FINALLY));
 }

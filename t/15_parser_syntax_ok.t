@@ -1,4 +1,5 @@
 use Test::Spec;
+require Test::NoWarnings;
 
 use FindBin qw/ $Bin /;
 use lib "$Bin/lib";
@@ -18,7 +19,7 @@ describe "parser" => sub {
         compile_ok q[
             use syntax 'try';
 
-            try 
+            try
                 {  }
             catch
                 (   My::Test1   $aa     )
@@ -47,6 +48,25 @@ describe "parser" => sub {
                 }       # 333
         ];
     };
+
+    it "can be parsed also without optional args" => sub {
+        compile_ok q[
+            use syntax 'try';
+
+            try {
+            }
+            catch ( My::Test1 ) {
+            }
+            catch {
+            }
+            finally {
+            }
+        ];
+    };
+};
+
+it "has no warnings" => sub {
+    Test::NoWarnings::had_no_warnings();
 };
 
 runtests;

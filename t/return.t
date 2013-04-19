@@ -1,4 +1,5 @@
 use Test::Spec;
+require Test::NoWarnings;
 
 use 5.010;
 use FindBin qw/ $Bin /;
@@ -90,7 +91,7 @@ describe "return" => sub {
                     return mock_return($mode);
                 }
                 finally { }
-                return -5;
+                die "This-is-never-called";
             }
 
             for (@RET_TYPES) {
@@ -138,7 +139,7 @@ describe "return" => sub {
                 catch (Error1 $err) {
                     return mock_return($mode);
                 }
-                return -5;
+                die "This-is-never-called";
             }
 
             for (@RET_TYPES) {
@@ -290,6 +291,10 @@ describe "return" => sub {
             }
         ];
     };
+};
+
+it "has no warnings" => sub {
+    Test::NoWarnings::had_no_warnings();
 };
 
 runtests;

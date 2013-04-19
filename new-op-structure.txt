@@ -1,0 +1,32 @@
+
+try statement:
+    *ret = eval {
+        # try block
+        $no_return_at_end;
+    };
+    $err = $@;
+
+    # catch blocks list
+    find_catch_block = for ( ... catch blocks list) { ... }
+    if (catch_block) {
+        *ret = eval {
+            # optional define exception variable
+
+            # catch block code
+
+            $no_return_at_end;
+        }
+    }
+
+    if (finally_block) {
+        *ret = {
+            # finally block
+            $no_return_at_end;
+        }
+    }
+
+    if ($err)
+        die $err;
+
+    IF *ret THEN return *ret;
+

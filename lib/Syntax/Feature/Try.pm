@@ -6,7 +6,7 @@ use XSLoader;
 use Scalar::Util qw/ blessed /;
 
 BEGIN {
-    our $VERSION = '0.004';
+    our $VERSION = '0.005';
     XSLoader::load();
 }
 
@@ -19,53 +19,46 @@ sub uninstall {
 }
 
 # TODO convert "our" to "my" variables
-our $end_of_block;
 our $return_values;
 
 sub _statement {
     my ($try_block, $catch_list, $finally_block) = @_;
 
-    local $end_of_block;
-    my $return;
+    my $stm_handler = bless {finally => $finally_block}, __PACKAGE__;
+
     local $@;
-    # TODO deduplicate try/catch/finally blocks code
-    eval {
-        BEGIN { $^H{+HINTKEY_BLOCK} = BLOCK_TRY }
-        $return = run_block(\&$try_block);
-    };
-    my $exception = $@;
+    my $exception = run_block($stm_handler, $try_block, 1);
     if ($exception and $catch_list) {
-        my $handler = _get_exception_handler($exception, $catch_list);
-        if ($handler) {
-            eval {
-                BEGIN { $^H{+HINTKEY_BLOCK} = BLOCK_CATCH }
-                $return = run_block(\&$handler, $exception);
-            };
-            $exception = $@;
+        my $catch_block = _get_exception_handler($exception, $catch_list);
+        if ($catch_block) {
+            $exception = run_block($stm_handler, $catch_block, 1, $exception);
         }
     }
 
     if ($finally_block) {
-        {
-            BEGIN { $^H{+HINTKEY_BLOCK} = BLOCK_FINALLY }
-            $return = run_block(\&$finally_block) || $return;
-        }
+        delete $stm_handler->{finally};
+        run_block($stm_handler, $finally_block);
     }
 
     if ($exception) {
         _rethrow($exception);
     }
 
-    $return_values = $return;
-    return $return;
+    $return_values = $stm_handler->{return};
+    return $stm_handler->{return};
+}
+
+sub DESTROY {
+    my ($self) = @_;
+    run_block($self, $self->{finally}) if $self->{finally};
 }
 
 sub _get_exception_handler {
     my ($exception, $catch_list) = @_;
 
     foreach my $item (@{ $catch_list }) {
-        my ($handler, @args) = @$item;
-        return $handler if _exception_match_args($exception, @args);
+        my ($block_ref, @args) = @$item;
+        return $block_ref if _exception_match_args($exception, @args);
     }
 }
 
@@ -124,7 +117,9 @@ Syntax::Feature::Try - try/catch/finally statement for exception handling
 This module implements syntax for try/catch/finally statement with behaviour
 similar to other programming languages (like Java, Python, etc.).
 
-It uses perl ( E<gt>= 5.14 ) experimental parser/lexer API.
+It handles correctly return/wantarray inside try/catch/finally blocks.
+
+It uses perl ( E<gt>= 5.14 ) keyword/parser API.
 
 =head1 SYNTAX
 
@@ -162,6 +157,20 @@ To catch all errors use syntax:
 
 Caught error is accessible inside I<catch block>
 via declared local variable C<$e>.
+
+=head2 catch without variable
+
+Variable name in catch block is not mandatory:
+
+    try {
+        ...
+    }
+    catch (MyError::FileNotFound) {
+        print "file not found";
+    }
+    catch {
+        print "operation failed";
+    }
 
 =head2 rethrow error
 
@@ -220,22 +229,22 @@ This module is compatible with Exception::Class
         # handle error here
     }
 
-=head2 return from subrutine
+=head2 return from subroutine
 
-This module supports also calling "return" inside try/catch/finally blocks
-to return values from subrutine.
+This module supports calling "return" inside try/catch/finally blocks
+to return values from subroutine.
 
     sub read_config {
         my $file;
         try {
             $fh = IO::File->new(...);
-            return $fh->getline; # it returns value from subrutine "read_config"
+            return $fh->getline; # it returns value from subroutine "read_config"
         }
         catch ($e) {
             # log error
         }
         finally {
-            $fh->close();
+            $fh->close() if $fh;
         }
     }
 
@@ -265,9 +274,13 @@ classes in Perl
 
 =head2 Other similar packages
 
-L<TryCatch> - first class try catch semantics for Perl
+L<TryCatch>
 
-L<Try> - nicer exception handling syntax
+L<Try>
+
+=head1 GIT REPOSITORY
+
+L<http://github.com/tomas-zemres/syntax-feature-try>
 
 =head1 AUTHOR
 

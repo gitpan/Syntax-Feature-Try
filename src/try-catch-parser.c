@@ -2,8 +2,7 @@
 
 #include "try-catch-constants.h"
 #include "try-catch-parser.h"
-#include "try-catch-hints.h"
-#include "try-catch-optree.h"
+#include "try-catch-op.h"
 
 /*** debug ***/
 
@@ -86,11 +85,11 @@ static SV *my_parse_identifier(pTHX_ int allow_namespace) {
     return ident;
 }
 
-#define parse_code_block(inj_code)  my_parse_code_block(aTHX_ inj_code)
-static OP *my_parse_code_block(pTHX_ char *inject_code) {
+#define parse_code_block(err_var_name)  my_parse_code_block(aTHX_ err_var_name)
+static OP *my_parse_code_block(pTHX_ SV *err_var_name_sv) {
     I32 floor;
     OP *content_op, *ret_op;
-    dXCPT;
+    char *inject_code;
 
     lex_read_space(0);
     if (lex_next_char != '{') {
@@ -98,7 +97,8 @@ static OP *my_parse_code_block(pTHX_ char *inject_code) {
     }
 
     // TODO better might be inject OPcode tree - instead of source-code
-    if (inject_code) {
+    if (err_var_name_sv) {
+        inject_code = form("my $%s=shift;", SvPVbyte_nolen(err_var_name_sv));
         DEBUG_MSG("Inject into block: %s\n", inject_code);
         lex_read_to(lex_buf_ptr+1);
         lex_stuff_pvn(inject_code, strlen(inject_code), 0);
@@ -135,35 +135,33 @@ static OP *my_parse_catch_args(pTHX) {
     OP *block_op;
 
     lex_read_space(0);
-    if (!parse_char('(')) {
-        syntax_error("expected '(' after catch");
+    if (parse_char('(')) {
+
+        // exception class-name
+        lex_read_space(0);
+        class_name_sv = parse_identifier(1);
+        if (class_name_sv) {
+            DEBUG_MSG("class-name: %s\n", SvPVbyte_nolen(class_name_sv));
+            warn_on_unusual_class_name(SvPVbyte_nolen(class_name_sv));
+        }
+
+        // exception variable-name
+        lex_read_space(0);
+        if (parse_char('$')) {
+            var_name_sv = sv_2mortal(parse_identifier(0));
+            if (!var_name_sv) {
+                syntax_error("invalid catch syntax");
+            }
+            DEBUG_MSG("varname: %s\n", SvPVbyte_nolen(var_name_sv));
+        }
+
+        lex_read_space(0);
+        if (!parse_char(')')) {
+            syntax_error("invalid catch syntax");
+        }
     }
 
-    // exception class-name
-    lex_read_space(0);
-    class_name_sv = parse_identifier(1);
-    if (class_name_sv) {
-        DEBUG_MSG("class-name: %s\n", SvPVbyte_nolen(class_name_sv));
-        warn_on_unusual_class_name(SvPVbyte_nolen(class_name_sv));
-    }
-
-    // exception variable-name
-    lex_read_space(0);
-    if (!parse_char('$')) {
-        syntax_error("invalid catch syntax");
-    }
-    var_name_sv = sv_2mortal(parse_identifier(0));
-    if (!var_name_sv) {
-        syntax_error("invalid catch syntax");
-    }
-    DEBUG_MSG("varname: %s\n", SvPVbyte_nolen(var_name_sv));
-
-    lex_read_space(0);
-    if (!parse_char(')')) {
-        syntax_error("invalid catch syntax");
-    }
-
-    block_op = parse_code_block(form("my $%s=shift;", SvPVbyte_nolen(var_name_sv)));
+    block_op = parse_code_block(var_name_sv);
     if (!block_op) {
         syntax_error("expected block after 'catch()'");
     }

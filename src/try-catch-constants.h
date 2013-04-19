@@ -7,16 +7,13 @@
 
 #define MAIN_PKG            "Syntax::Feature::Try"
 #define HINTKEY_ENABLED     MAIN_PKG "/enabled"
-#define HINTKEY_BLOCK       MAIN_PKG "/block"
-
-#define BLOCK_TRY       1
-#define BLOCK_CATCH     2
-#define BLOCK_FINALLY   3
-
-#define VAR_NAME_end_of_block   MAIN_PKG "::end_of_block"
 
 static HV *internal_stash;
-static SV *hintkey_enabled_sv, *hintkey_block_sv;
+static SV *hintkey_enabled_sv, *end_of_block_sv;
+
+#define END_OF_BLOCK_SV     newRV_inc(end_of_block_sv)
+#define IS_END_OF_BLOCK(sv) my_is_end_of_block(aTHX_ sv)
+int my_is_end_of_block(pTHX_ SV* rv);
 
 #define setup_constants()   my_setup_constants(aTHX)
 static void my_setup_constants(pTHX);

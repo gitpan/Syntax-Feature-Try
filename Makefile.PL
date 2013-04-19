@@ -17,6 +17,7 @@ my %WriteMakefileArgs = (
     'Test::Exception' => '0',
     'Test::LeakTrace' => '0',
     'Test::More' => '0',
+    'Test::NoWarnings' => '0',
     'Test::Spec' => '0',
     'Test::Warn' => '0',
     'base' => '0',
@@ -38,7 +39,7 @@ my %WriteMakefileArgs = (
     'syntax' => '0.004',
     'warnings' => '0'
   },
-  'VERSION' => '0.004',
+  'VERSION' => '0.005',
   'test' => {
     'TESTS' => 't/*.t'
   }
