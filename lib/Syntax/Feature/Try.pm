@@ -6,7 +6,7 @@ use XSLoader;
 use Scalar::Util qw/ blessed /;
 
 BEGIN {
-    our $VERSION = '0.007';
+    our $VERSION = '0.008';
     XSLoader::load();
 }
 
@@ -277,6 +277,8 @@ classes in Perl
 L<TryCatch>
 
 L<Try>
+
+L<Try::Tiny>
 
 =head1 GIT REPOSITORY
 

@@ -13,7 +13,9 @@ my %WriteMakefileArgs = (
     'Exception::Class' => '0',
     'Exporter' => '0',
     'FindBin' => '0',
-    'MooseX::Declare' => '0',
+    'Mock::Animal' => '0',
+    'Mock::Bird' => '0',
+    'Mock::Raptor' => '0',
     'Test::Exception' => '0',
     'Test::LeakTrace' => '0',
     'Test::More' => '0',
@@ -39,7 +41,7 @@ my %WriteMakefileArgs = (
     'syntax' => '0.004',
     'warnings' => '0'
   },
-  'VERSION' => '0.007',
+  'VERSION' => '0.008',
   'test' => {
     'TESTS' => 't/*.t'
   }
