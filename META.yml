@@ -3,13 +3,9 @@ abstract: 'try/catch/finally statement for exception handling'
 author:
   - 'Tomas Pokorny <tnt@cpan.org>'
 build_requires:
-  English: 0
   Exception::Class: 0
   Exporter: 0
   FindBin: 0
-  Mock::Animal: 0
-  Mock::Bird: 0
-  Mock::Raptor: 0
   Test::Exception: 0
   Test::LeakTrace: 0
   Test::More: 0
@@ -17,12 +13,12 @@ build_requires:
   Test::Spec: 0
   Test::Warn: 0
   base: 0
-  perl: v5.10.1
+  lib: 0
   syntax: 0
 configure_requires:
   ExtUtils::MakeMaker: 6.30
 dynamic_config: 0
-generated_by: 'Dist::Zilla version 4.300005, CPAN::Meta::Converter version 2.110440'
+generated_by: 'Dist::Zilla version 4.300037, CPAN::Meta::Converter version 2.132140'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -35,4 +31,4 @@ requires:
   strict: 0
   syntax: 0.004
   warnings: 0
-version: 0.008
+version: 0.009

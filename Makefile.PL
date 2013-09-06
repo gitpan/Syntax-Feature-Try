@@ -9,13 +9,9 @@ my %WriteMakefileArgs = (
   'ABSTRACT' => 'try/catch/finally statement for exception handling',
   'AUTHOR' => 'Tomas Pokorny <tnt@cpan.org>',
   'BUILD_REQUIRES' => {
-    'English' => '0',
     'Exception::Class' => '0',
     'Exporter' => '0',
     'FindBin' => '0',
-    'Mock::Animal' => '0',
-    'Mock::Bird' => '0',
-    'Mock::Raptor' => '0',
     'Test::Exception' => '0',
     'Test::LeakTrace' => '0',
     'Test::More' => '0',
@@ -23,7 +19,7 @@ my %WriteMakefileArgs = (
     'Test::Spec' => '0',
     'Test::Warn' => '0',
     'base' => '0',
-    'perl' => 'v5.10.1',
+    'lib' => '0',
     'syntax' => '0'
   },
   'CONFIGURE_REQUIRES' => {
@@ -41,7 +37,7 @@ my %WriteMakefileArgs = (
     'syntax' => '0.004',
     'warnings' => '0'
   },
-  'VERSION' => '0.008',
+  'VERSION' => '0.009',
   'test' => {
     'TESTS' => 't/*.t'
   }
