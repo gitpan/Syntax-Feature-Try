@@ -6,6 +6,8 @@ build_requires:
   Exception::Class: 0
   Exporter: 0
   FindBin: 0
+  Moose: 0
+  Moose::Util::TypeConstraints: 0
   Test::Exception: 0
   Test::LeakTrace: 0
   Test::More: 0
@@ -14,11 +16,11 @@ build_requires:
   Test::Warn: 0
   base: 0
   lib: 0
-  syntax: 0
+  syntax: 0.004
 configure_requires:
   ExtUtils::MakeMaker: 6.30
 dynamic_config: 0
-generated_by: 'Dist::Zilla version 4.300037, CPAN::Meta::Converter version 2.132140'
+generated_by: 'Dist::Zilla version 5.008, CPAN::Meta::Converter version 2.133380'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -31,4 +33,4 @@ requires:
   strict: 0
   syntax: 0.004
   warnings: 0
-version: 0.009
+version: 1.000
